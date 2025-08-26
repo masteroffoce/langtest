@@ -81,7 +81,7 @@ def fill_routine(routine_builder, actions_list):
                     #add_print(value)
                     add_puts(value, routine_builder, module, fputs)
                 case "call":
-                    routine_builder.call(routines[value][1], [])
+                    routine_builder.call(routines[value][1], [], tail=True)
                 case _:
                     raise Exception(f"Unrecognised token: {action}")
 
