@@ -1,0 +1,28 @@
+[
+	{ "routine": {
+		"index": 9,
+		"name": "cool",
+		"body": [
+			{ "print": "Hello," },
+			{ "print": " world!" }
+		]
+		}
+	},
+	{ "routine": {
+		"index": 8,
+		"name": "master",
+		"body": [
+			{ "print": "Hello! This is the master routine speaking to you." }
+		]
+		}
+	},
+	{ "routine": {
+		"index": 7,
+		"name": "this is a name",
+		"body": [
+			{ "print": "testing testing" },
+			{ "call": 9 }
+		]
+		}
+	}
+]

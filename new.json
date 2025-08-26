@@ -1,0 +1,15 @@
+[
+	{ "print": "Hello," },
+	{ "print": " world!" },
+	{ "routine": {
+		"index": 0,
+		"name": "main",
+		"body": [
+			{ "print": "Hi!" },
+			{ "print": "This is a routine speaking to you." }
+		]
+		}
+	},
+	{ "call": 0 },
+	{ "call": "main"}
+]
