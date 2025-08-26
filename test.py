@@ -46,6 +46,15 @@ main = ir.Function(module, fnty, name="main")
 block = main.append_basic_block(name="entry")
 builder = ir.IRBuilder(block)
 
+#Make builders and modules for all routines
+routines = {}
+for current_routine in program:
+    index = current_routine["routine"]["index"]
+    if index in routines:
+        raise Exception("Duplicate routine signature numbers")
+    this_routine, this_builder = add_routine(current_routine["routine"]["name"])
+    routines[index] = (current_routine, this_routine, this_builder)
+
 
 #Define fputs
 fputs_ty = ir.FunctionType(ir.IntType(32),
@@ -72,45 +81,10 @@ def fill_routine(routine_builder, actions_list):
                     #add_print(value)
                     add_puts(value, routine_builder, module, fputs)
                 case "call":
-                    routine_builder.call(filled_routines[value][1], [])
+                    routine_builder.call(routines[value][1], [])
                 case _:
                     raise Exception(f"Unrecognised token: {action}")
 
-
-
-'''
-#Get routine with lowest index
-routines = {}
-for current_routine in program:
-    try:
-        index = current_routine["routine"]["index"]
-        if index in routines:
-            raise Exception("Two functions with the same index")
-        routines[index] = current_routine
-    except:
-        print("Non-routine in highest level!")
-print(f"ROUTINES:\n\n{routines}\n\n")
-
-#Make dict of all routines
-filled_routines = {}
-for current_index, current_routine in routines.items():
-    print("\n\n")
-    body = current_routine["routine"]["body"]
-    print(body)
-    print("\n\n")
-    this_routine, this_builder = add_routine(current_routine["routine"]["name"])
-    fill_routine(this_builder, body)
-    this_builder.ret_void()
-    filled_routines[current_index] = this_routine
-    '''
-
-routines = {}
-for current_routine in program:
-    index = current_routine["routine"]["index"]
-    if index in routines:
-        raise Exception("Duplicate routine signature numbers")
-    this_routine, this_builder = add_routine(current_routine["routine"]["name"])
-    routines[index] = (current_routine, this_routine, this_builder)
 
 filled_routines = {}
 for index, routine_data in routines.items():
