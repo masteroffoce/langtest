@@ -21,8 +21,10 @@
 		"index": 7,
 		"name": "this is a name",
 		"body": [
-			{ "print": "testing testing" },
-			{ "call": 9 }
+			{ "system": "echo hi" },
+			{ "print": "hello" },
+			{ "system": "pwd" },
+			{ "print": "yo" }
 		]
 		}
 	}

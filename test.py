@@ -5,7 +5,7 @@ import json
 
 strings_defined = {}
 
-def add_puts(text: str, builder, module, fputs):
+def add_puts(text: str, builder, module, fputs, fflush):
     if not text in strings_defined: #Damn, I feel smart
         arr = bytearray(text.encode("utf-8") + b"\0")
         str_ty = ir.ArrayType(ir.IntType(8), len(arr))
@@ -21,6 +21,22 @@ def add_puts(text: str, builder, module, fputs):
     stdout_gv = module.globals["stdout"]
     stdout_ptr = builder.load(stdout_gv)
     builder.call(fputs, [str_ptr, stdout_ptr])
+    builder.call(fflush, [stdout_ptr])
+    
+def add_system(text: str, builder, module, system):
+    if not text in strings_defined:
+        arr = bytearray(text.encode("utf-8") + b"\0")
+        str_ty = ir.ArrayType(ir.IntType(8), len(arr))
+        gv = ir.GlobalVariable(module, str_ty, name="str_" + str(abs(hash(text)) % 10000))
+        gv.global_constant = True
+        gv.initializer = ir.Constant(str_ty, arr)
+        str_ptr = builder.gep(gv, [ir.Constant(ir.IntType(64), 0),
+                                   ir.Constant(ir.IntType(64), 0)])
+        strings_defined[text] = str_ptr
+    else:
+        str_ptr = strings_defined[text]
+
+    builder.call(system, [str_ptr])
 
 def add_routine(name: str):
     func_type = ir.FunctionType(ir.VoidType(), [])
@@ -61,6 +77,19 @@ fputs_ty = ir.FunctionType(ir.IntType(32),
                            [ir.PointerType(ir.IntType(8)),
                             ir.PointerType(ir.IntType(8))])
 fputs = ir.Function(module, fputs_ty, name="fputs")
+fputs.attributes.add("nounwind")
+
+#Define system
+system_ty = ir.FunctionType(ir.IntType(32),
+                            [ir.PointerType(ir.IntType(8))])
+
+system = ir.Function(module, system_ty, name="system")
+system.attributes.add("nounwind")
+
+#Define fflush
+fflush_ty = ir.FunctionType(ir.IntType(32),
+                            [ir.PointerType(ir.IntType(8))])
+fflush = ir.Function(module, fflush_ty, name="fflush")
 
 #Define stdout
 stdout_ty = ir.PointerType(ir.IntType(8))
@@ -70,7 +99,7 @@ stdout_gv.linkage = "external"
 
 #Make test routine
 test_routine, test_builder = add_routine("test")
-add_puts("yoooooooooooo \n", test_builder, module, fputs)
+add_puts("yoooooooooooo \n", test_builder, module, fputs, fflush)
 test_builder.ret_void()
 
 def fill_routine(routine_builder, actions_list):
@@ -79,9 +108,11 @@ def fill_routine(routine_builder, actions_list):
             match action:
                 case "print":
                     #add_print(value)
-                    add_puts(value, routine_builder, module, fputs)
+                    add_puts(value, routine_builder, module, fputs, fflush)
                 case "call":
                     routine_builder.call(routines[value][1], [], tail=True)
+                case "system":
+                    add_system(value, routine_builder, module, system)
                 case _:
                     raise Exception(f"Unrecognised token: {action}")
 
